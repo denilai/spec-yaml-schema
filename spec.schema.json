@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://space-ai.local/tekton-ci/spec/1",
+  "title": "Application CI spec (spec.yaml)",
+  "description": "Контракт spec.yaml для resolve-ci-image / Kaniko. Список образов — images (минимум один элемент).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["images"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Версия формата; при несовместимых изменениях увеличить."
+    },
+    "meta": {
+      "description": "Произвольные метаданные; пайплайн не использует.",
+      "oneOf": [
+        { "type": "null" },
+        { "type": "object", "additionalProperties": true }
+      ]
+    },
+    "images": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/imageSpec" },
+      "description": "Образы для сборки за один прогон пайплайна."
+    }
+  },
+  "$defs": {
+    "imageSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "repository"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+          "description": "Идентификатор для плейсхолдеров CI_IMAGE_<NAME> (NAME в UPPER_SNAKE)."
+        },
+        "repository": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Registry/репозиторий без тега."
+        },
+        "build": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "context": {
+              "type": "string",
+              "description": "Каталог контекста относительно корня репозитория."
+            },
+            "dockerfile": {
+              "type": "string",
+              "description": "Имя Dockerfile относительно context."
+            },
+            "target": {
+              "type": "string",
+              "description": "Стадия multi-stage (Kaniko --target)."
+            },
+            "args": {
+              "type": "object",
+              "additionalProperties": {
+                "type": ["string", "number", "integer", "boolean"]
+              },
+              "description": "Kaniko --build-arg; значения сериализуются в строки."
+            },
+            "labels": {
+              "type": "object",
+              "additionalProperties": {
+                "type": ["string", "number", "integer", "boolean"]
+              },
+              "description": "Kaniko --label."
+            },
+            "platforms": {
+              "description": "Kaniko --custom-platform: строка или список (берётся первый элемент).",
+              "oneOf": [
+                { "type": "string" },
+                { "type": "array", "items": { "type": "string" } }
+              ]
+            },
+            "cache": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "description": "Включить registry cache (как в парсере: boolean, 0/1, строки вроде true/on).",
+                  "type": ["boolean", "string", "integer"]
+                },
+                "repo": {
+                  "type": "string",
+                  "description": "Отдельный репозиторий для кеша Kaniko."
+                }
+              }
+            },
+            "extraFlags": {
+              "description": "Дополнительные аргументы executor (строка или список строк, далее shlex).",
+              "oneOf": [
+                { "type": "string" },
+                { "type": "array", "items": { "type": "string" } }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

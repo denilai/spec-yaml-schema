@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://space-ai.local/tekton-ci/spec/1",
+  "$id": "https://space-ai.local/tekton-cd/spec/1",
   "title": "Application CI spec (spec.yaml)",
   "description": "Контракт spec.yaml для resolve-ci-image / Kaniko. Список образов — images (минимум один элемент).",
   "type": "object",
@@ -18,6 +18,18 @@
         { "type": "null" },
         { "type": "object", "additionalProperties": true }
       ]
+    },
+    "watch": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Настройки инкрементальной сборки (глобальные пути). Изменение любого globalPath пересобирает все образы с build.watch.",
+      "properties": {
+        "globalPaths": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Пути, изменение которых вызывает пересборку всех образов с build.watch (например go.mod, go.sum)."
+        }
+      }
     },
     "images": {
       "type": "array",
@@ -101,6 +113,11 @@
                 { "type": "string" },
                 { "type": "array", "items": { "type": "string" } }
               ]
+            },
+            "watch": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 },
+              "description": "Пути для инкрементальной сборки: образ пересобирается только при изменении файлов в этих путях. Без watch — образ собирается всегда."
             }
           }
         }
